@@ -40,8 +40,12 @@ func main() {
 		Model: "llama-3.3-70b-versatile",
 		Messages: []Msg{
 			{
+				Role:    "system",
+				Content: "You are UI/UX designer. Your primary role is to assist the user in settings the prerequisites like the perfect color scheme, font families, hero images,etc. for designing an application or a modern website according to the prompt of the user",
+			},
+			{
 				Role:    "user",
-				Content: "What day is today",
+				Content: "I want to create an ecommerce website to sell fashion products such as clothes and accessories.",
 			},
 		},
 	}

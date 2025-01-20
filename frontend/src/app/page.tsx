@@ -29,7 +29,9 @@ export default function Home() {
         >
           Generate
         </button>
-        <Markdown>{response}</Markdown>
+        <div className="space-y-2 p-4 border-2 border-white rounded-xl">
+          <Markdown>{response}</Markdown>
+        </div>
       </section>
     </main>
   );

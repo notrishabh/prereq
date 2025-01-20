@@ -1,14 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import parse from "html-react-parser";
+import Markdown from "react-markdown";
 
 export default function Home() {
   const [response, setResponse] = useState("");
   const [ques, setQues] = useState("");
   const getAiResponse = async () => {
     const x = await fetch(`http://localhost:8080/ai?q=${ques}`);
-    setResponse(await x.text());
+    const text = await x.text();
+    const res = text.slice(1, -1).replaceAll("\\n", "\n");
+    setResponse(res);
   };
   const handleInput = (event: React.ChangeEvent<HTMLInputElement>) => {
     setQues(event.target.value);
@@ -27,7 +29,7 @@ export default function Home() {
         >
           Generate
         </button>
-        <p>{parse(response)}</p>
+        <Markdown>{response}</Markdown>
       </section>
     </main>
   );

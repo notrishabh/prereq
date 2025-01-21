@@ -12,38 +12,41 @@ import (
 	"github.com/rs/cors"
 )
 
-func getAIresponse(prompt string) (string, error) {
+func getAIresponse(prompt string, oldQues []groq.Message) (string, error) {
 	apiKey := os.Getenv("GROQ_API_KEY")
 
 	client := groq.NewClient(groq.WithAPIKey(apiKey))
 
+	messages := []groq.Message{}
+	systemMsg := groq.Message{
+		Role:    "system",
+		Content: "You are UI/UX designer. Your primary role is to assist the user in settings the prerequisites like the perfect color scheme, font families, hero images,etc. for designing an application or a modern website according to the prompt of the user",
+	}
+	newMsg := groq.Message{
+		Role:    "user",
+		Content: prompt,
+	}
+
+	messages = append(messages, systemMsg)
+	messages = append(messages, oldQues...)
+	messages = append(messages, newMsg)
+
 	chatCompletion, err := client.CreateChatCompletion(groq.CompletionCreateParams{
-		Model: "llama3-8b-8192",
-		Messages: []groq.Message{
-			{
-				Role:    "system",
-				Content: "You are UI/UX designer. Your primary role is to assist the user in settings the prerequisites like the perfect color scheme, font families, hero images,etc. for designing an application or a modern website according to the prompt of the user",
-			},
-			{
-				Role:    "user",
-				Content: prompt,
-			},
-		},
-		// Stream: true,
+		Model:    "llama3-8b-8192",
+		Messages: messages,
 	})
 	if err != nil {
 		return "", err
 	}
 
-	// for delta := range chatCompletion.Stream {
-	// 	fmt.Print(delta.Choices[0].Delta.Content)
-	// }
 	return chatCompletion.Choices[0].Message.Content, nil
 }
 
 func aiResponseHandler(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query().Get("q")
-	resp, err := getAIresponse(q)
+	var oldQues []groq.Message
+	json.NewDecoder(r.Body).Decode(&oldQues)
+	resp, err := getAIresponse(q, oldQues)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -58,7 +61,7 @@ func main() {
 	}
 	port := "8080"
 	r := mux.NewRouter()
-	r.HandleFunc("/ai", aiResponseHandler).Methods("GET")
+	r.HandleFunc("/ai", aiResponseHandler).Methods("POST")
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{"*"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"},

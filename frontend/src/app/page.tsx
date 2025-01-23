@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Markdown from "react-markdown";
 
 type groqmsg = {
@@ -9,22 +9,27 @@ type groqmsg = {
 };
 
 export default function Home() {
-  const [response, setResponse] = useState("");
   const [ques, setQues] = useState("");
-  const [oldQues, setOldQues] = useState<groqmsg[]>([]);
+  const [chat, setChat] = useState<groqmsg[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const lastMsgRef = React.createRef<HTMLDivElement>();
+
+  useEffect(() => {
+    lastMsgRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [lastMsgRef]);
 
   const getAiResponse = async () => {
     const x = await fetch(`http://localhost:8080/ai?q=${ques}`, {
       method: "post",
-      body: JSON.stringify(oldQues),
+      body: JSON.stringify(chat),
     });
     const text = await x.text();
     const res = text
       .slice(1, -1)
       .replaceAll("\\n", "\n")
       .replaceAll("\\t", "\t");
-    setOldQues([
-      ...oldQues,
+    setChat([
+      ...chat,
       {
         Role: "user",
         Content: ques,
@@ -34,7 +39,7 @@ export default function Home() {
         Content: res,
       },
     ]);
-    setResponse(res);
+    setLoading(false);
   };
 
   const handleInput = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -43,26 +48,34 @@ export default function Home() {
 
   const handleSubmitForm = (event: React.FormEvent) => {
     event.preventDefault();
+    setLoading(true);
     getAiResponse();
     setQues("");
+  };
+
+  const Loading = () => {
+    return (
+      <div className="loader mx-auto animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500 border-solid" />
+    );
   };
 
   const chatScreen = () => {
     return (
       <div className="mt-10 mb-8 h-[calc(100vh-22rem)] w-2/3 overflow-auto">
-        {oldQues.map((q: groqmsg, i) => (
+        {chat.map((q: groqmsg, i) => (
           <div
             key={i}
             className={`flex ${q.Role === "user" ? "justify-end" : ""}`}
           >
             <Markdown
-              key={i}
               className={`text-lg mb-8 whitespace-pre-line ${q.Role === "user" ? "bg-gray-700 px-4 py-2 rounded-2xl" : ""}`}
             >
               {q.Content}
             </Markdown>
           </div>
         ))}
+        {loading && <Loading />}
+        <div ref={lastMsgRef} />
       </div>
     );
   };
@@ -71,7 +84,7 @@ export default function Home() {
     <main>
       <div className="fixed text-3xl p-8">First Step</div>
       <section className="min-h-screen flex flex-col justify-center items-center w-full">
-        {response ? (
+        {chat.length ? (
           chatScreen()
         ) : (
           <h1 className="text-3xl mb-8">What are you building?</h1>

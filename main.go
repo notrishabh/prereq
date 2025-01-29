@@ -59,7 +59,11 @@ func main() {
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
-	port := "8080"
+	port := os.Getenv("PORT")
+	if port == "" {
+		log.Fatal("PORT env var no set")
+	}
+
 	r := mux.NewRouter()
 	r.HandleFunc("/ai", aiResponseHandler).Methods("POST")
 	c := cors.New(cors.Options{

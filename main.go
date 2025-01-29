@@ -9,7 +9,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 	"github.com/jpoz/groq"
-	"github.com/rs/cors"
 )
 
 func getAIresponse(prompt string, oldQues []groq.Message) (string, error) {
@@ -66,13 +65,6 @@ func main() {
 
 	r := mux.NewRouter()
 	r.HandleFunc("/ai", aiResponseHandler).Methods("POST")
-	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{"*"},
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"},
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token", "Cookie"},
-		AllowCredentials: true,
-	})
-	handler := c.Handler(r)
 	log.Printf("server starting on port: %s", port)
-	log.Fatal(http.ListenAndServe(":"+port, handler))
+	log.Fatal(http.ListenAndServe(":"+port, r))
 }

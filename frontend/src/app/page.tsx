@@ -45,7 +45,7 @@ export default function Home() {
   };
 
   const getAiResponse = async () => {
-    const x = await fetch(`http://localhost:8080/ai?q=${ques}`, {
+    const x = await fetch(`/api/ai?q=${ques}`, {
       method: "post",
       body: JSON.stringify(chatWithHex.map((r) => r.chat)),
     });
